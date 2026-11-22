@@ -119,6 +119,14 @@ pub fn bench(options: TokenStream, item: TokenStream) -> TokenStream {
     let is_extern_abi = fn_sig.abi.is_some();
 
     let fn_args = &fn_sig.inputs;
+    if let Some(FnArg::Receiver(receiver)) = fn_args.first() {
+        return syn::Error::new_spanned(
+            receiver,
+            "benchmarks must be free functions",
+        )
+        .into_compile_error()
+        .into();
+    }
 
     let type_param: Option<(usize, &syn::TypeParam)> = fn_sig
         .generics
@@ -171,13 +179,11 @@ pub fn bench(options: TokenStream, item: TokenStream) -> TokenStream {
 
     // The last argument type is used as the only `args` item type because we
     // currently only support one runtime argument.
-    let last_arg_type = if options.args_expr.is_some() {
-        fn_args.last().map(|arg| match arg {
-            FnArg::Receiver(arg) => &*arg.ty,
-            FnArg::Typed(arg) => &*arg.ty,
-        })
-    } else {
-        None
+    let last_arg_type = match fn_args.last() {
+        Some(FnArg::Typed(arg)) if options.args_expr.is_some() => {
+            Some(arg.ty.as_ref())
+        }
+        _ => None,
     };
 
     let last_arg_type_tokens = last_arg_type

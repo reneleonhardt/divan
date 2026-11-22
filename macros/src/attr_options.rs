@@ -191,8 +191,10 @@ impl AttrOptions {
 
                         // If the option is missing `=`, use a `true` literal.
                         Err(_) => Expr::Lit(syn::ExprLit {
-                            lit: syn::LitBool::new(true, meta.path.span())
-                                .into(),
+                            lit: syn::Lit::Bool(syn::LitBool::new(
+                                true,
+                                meta.path.span(),
+                            )),
                             attrs: Vec::new(),
                         }),
                     };

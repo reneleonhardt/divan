@@ -26,6 +26,14 @@
 //!
 //! # Type Checking
 //!
+//! ```compile_fail
+//! struct Example;
+//! impl Example {
+//!     #[divan::bench(args = [])]
+//!     fn bench(&self) {}
+//! }
+//! ```
+//!
 //! The following won't produce any benchmarks because `types = []`. However, we
 //! still want to ensure that values in `consts = [...]` match the generic
 //! const's type of `i32`.

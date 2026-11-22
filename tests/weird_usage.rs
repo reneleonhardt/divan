@@ -3,7 +3,10 @@
 // Miri cannot discover benchmarks.
 #![cfg(not(miri))]
 
-use std::time::Duration;
+use std::{
+    sync::atomic::{AtomicBool, Ordering::Relaxed},
+    time::Duration,
+};
 
 use divan::{__private::BENCH_ENTRIES, Divan};
 
@@ -15,7 +18,7 @@ use divan::{__private::BENCH_ENTRIES, Divan};
 )]
 fn zero_throughput() {}
 
-#[divan::bench(min_time = Duration::ZERO)]
+#[divan::bench(min_time = Duration::ZERO, skip_ext_time)]
 fn min_min() {}
 
 #[divan::bench(max_time = Duration::MAX)]
@@ -74,6 +77,15 @@ fn bench_consts<const N: isize>() {}
 #[divan::bench(args = [])]
 fn empty_args(_: usize) {}
 
+static BORROWED_ARG_RAN: AtomicBool = AtomicBool::new(false);
+
+#[divan::bench(args = ["borrowed"])]
+#[allow(clippy::needless_lifetimes)]
+fn borrowed_arg<'a>(arg: &'a str) {
+    assert_eq!(arg, "borrowed");
+    BORROWED_ARG_RAN.store(true, Relaxed);
+}
+
 #[divan::bench(types = [])]
 #[allow(dead_code)]
 fn empty_types<T>() {}
@@ -105,6 +117,7 @@ fn empty_types_consts_4<const C: usize, T>() {}
 #[test]
 fn test_fn() {
     Divan::default().test_benches();
+    assert!(BORROWED_ARG_RAN.load(Relaxed));
 }
 
 // Test that each function appears the expected number of times.
