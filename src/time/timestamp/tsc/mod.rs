@@ -23,20 +23,18 @@ impl TscTimestamp {
     /// On AArch64, this simply reads `cntfrq_el0`. On x86, this measures the
     /// TSC frequency.
     #[inline]
-    #[allow(unreachable_code)]
     pub fn frequency() -> Result<NonZeroU64, TscUnavailable> {
         // Miri does not support inline assembly.
-        #[cfg(miri)]
-        return Err(TscUnavailable::Unimplemented);
-
         #[cfg(any(
             target_arch = "aarch64",
             target_arch = "x86",
             target_arch = "x86_64"
         ))]
-        return arch::frequency().and_then(|v| {
-            NonZeroU64::new(v).ok_or(TscUnavailable::ZeroFrequency)
-        });
+        if !cfg!(miri) {
+            let frequency = arch::frequency()?;
+            return NonZeroU64::new(frequency)
+                .ok_or(TscUnavailable::ZeroFrequency);
+        }
 
         Err(TscUnavailable::Unimplemented)
     }
@@ -119,4 +117,13 @@ impl fmt::Display for TscUnavailable {
 
         f.write_str(reason)
     }
+}
+
+#[cfg(all(test, miri))]
+#[test]
+fn frequency_unavailable_under_miri() {
+    assert!(matches!(
+        TscTimestamp::frequency(),
+        Err(TscUnavailable::Unimplemented),
+    ));
 }
