@@ -11,6 +11,11 @@ use sha2::Digest;
 static ALLOC: AllocProfiler = AllocProfiler::system();
 
 fn main() {
+    #[cfg(test)]
+    {
+        assert_eq!(XxHash32::hash(b"abc"), 0x32d1_53ff);
+        assert_eq!(XxHash64::hash(b"abc"), 0x44bc_2cf5_ad77_0999);
+    }
     divan::main();
 }
 
@@ -21,6 +26,8 @@ struct Sha2_256;
 struct Sha2_512;
 struct Sha3_256;
 struct Sha3_512;
+struct XxHash32;
+struct XxHash64;
 
 /// [`Hasher::write`] + [`Hasher::finish`].
 #[divan::bench(
@@ -38,8 +45,8 @@ struct Sha3_512;
         Sha3_256,
         Sha3_512,
         std::collections::hash_map::DefaultHasher,
-        twox_hash::XxHash32,
-        twox_hash::XxHash64,
+        XxHash32,
+        XxHash64,
         wyhash::WyHash,
     ],
     args = [0, 8, 64, 1024, 1024 * 1024],
@@ -73,6 +80,26 @@ impl<H: std::hash::Hasher + Default> Hasher for H {
         let mut hasher = H::default();
         hasher.write(bytes);
         hasher.finish()
+    }
+}
+
+impl Hasher for XxHash32 {
+    type Hash = u64;
+
+    fn hash(bytes: &[u8]) -> Self::Hash {
+        let mut hasher = xxhash_rust::xxh32::Xxh32::new(0);
+        hasher.update(bytes);
+        u64::from(hasher.digest())
+    }
+}
+
+impl Hasher for XxHash64 {
+    type Hash = u64;
+
+    fn hash(bytes: &[u8]) -> Self::Hash {
+        let mut hasher = xxhash_rust::xxh64::Xxh64::new(0);
+        hasher.update(bytes);
+        hasher.digest()
     }
 }
 

@@ -30,7 +30,7 @@ seahash = { version = "4.1", optional = true }
 sha1 = { version = "0.10", optional = true }
 sha2 = { version = "0.10", optional = true }
 sha3 = { version = "0.10", optional = true }
-twox-hash = { version = "1.6", optional = true }
+xxhash-rust = { version = "0.8", optional = true, features = ["xxh32", "xxh64"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 mach2 = "0.5"
@@ -48,7 +48,7 @@ hash = [
     "sha1",
     "sha2",
     "sha3",
-    "twox-hash",
+    "xxhash-rust",
 ]
 
 [[bench]]
