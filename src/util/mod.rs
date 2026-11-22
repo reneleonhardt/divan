@@ -85,7 +85,7 @@ pub(crate) fn slice_middle<T>(slice: &[T]) -> &[T] {
 
     if len == 0 {
         slice
-    } else if len.is_multiple_of(2) {
+    } else if len % 2 == 0 {
         &slice[(len / 2) - 1..][..2]
     } else {
         &slice[len / 2..][..1]

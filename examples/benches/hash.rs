@@ -4,8 +4,8 @@
 //! cargo bench -q -p examples --bench hash --features hash
 //! ```
 
-use digest::Digest;
 use divan::AllocProfiler;
+use sha2::Digest;
 
 #[global_allocator]
 static ALLOC: AllocProfiler = AllocProfiler::system();
@@ -98,7 +98,7 @@ impl Hasher for Sha1 {
     type Hash = [u8; 20];
 
     fn hash(bytes: &[u8]) -> Self::Hash {
-        sha1::Sha1::new_with_prefix(bytes).finalize().into()
+        sha1::Sha1::digest(bytes).into()
     }
 }
 
@@ -106,7 +106,7 @@ impl Hasher for Sha2_256 {
     type Hash = [u8; 32];
 
     fn hash(bytes: &[u8]) -> Self::Hash {
-        sha2::Sha256::new_with_prefix(bytes).finalize().into()
+        sha2::Sha256::digest(bytes).into()
     }
 }
 
@@ -114,7 +114,7 @@ impl Hasher for Sha2_512 {
     type Hash = [u8; 64];
 
     fn hash(bytes: &[u8]) -> Self::Hash {
-        sha2::Sha512::new_with_prefix(bytes).finalize().into()
+        sha2::Sha512::digest(bytes).into()
     }
 }
 
@@ -122,7 +122,7 @@ impl Hasher for Sha3_256 {
     type Hash = [u8; 32];
 
     fn hash(bytes: &[u8]) -> Self::Hash {
-        sha3::Sha3_256::new_with_prefix(bytes).finalize().into()
+        sha3::Sha3_256::digest(bytes).into()
     }
 }
 
@@ -130,6 +130,6 @@ impl Hasher for Sha3_512 {
     type Hash = [u8; 64];
 
     fn hash(bytes: &[u8]) -> Self::Hash {
-        sha3::Sha3_512::new_with_prefix(bytes).finalize().into()
+        sha3::Sha3_512::digest(bytes).into()
     }
 }
