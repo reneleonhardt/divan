@@ -3,7 +3,6 @@ on: [push, pull_request]
 name: CI
 
 env:
-  CARGO_HOME: ${{ github.workspace }}/.cargo
   CARGO_TERM_COLOR: always
   RUSTFLAGS: -D warnings -A unused-imports
   RUSTDOCFLAGS: -D warnings
@@ -16,10 +15,20 @@ jobs:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: rustup update stable --no-self-update
       - run: rustc -Vv
       - run: cargo fmt --all -- --check
+
+  # Check fresh dependency resolution on the oldest supported toolchain.
+  msrv:
+    name: MSRV
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: rustup toolchain install 1.80.0 --profile minimal
+      - run: cargo +1.80.0 check --workspace --all-targets --all-features
 
   # Build documentation.
   rustdoc:
@@ -27,11 +36,11 @@ jobs:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/cache@v4
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
         with:
           path: |
-            ${{ env.CARGO_HOME }}
+            ~/.cargo/registry
             target
           key: rustdoc-${{ runner.os }}
       - run: rustup update stable --no-self-update
@@ -50,11 +59,11 @@ jobs:
           - macos-latest
           - windows-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/cache@v4
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
         with:
           path: |
-            ${{ env.CARGO_HOME }}
+            ~/.cargo/registry
             target
           key: clippy-${{ runner.os }}
       - run: rustup update stable --no-self-update
@@ -76,11 +85,11 @@ jobs:
           - stable
           - nightly
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/cache@v4
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
         with:
           path: |
-            ${{ env.CARGO_HOME }}
+            ~/.cargo/registry
             target
           key: unit-test-${{ runner.os }}-${{ matrix.rust }}
       - run: rustup default ${{ matrix.rust }}
@@ -94,11 +103,11 @@ jobs:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/cache@v4
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
         with:
           path: |
-            ${{ env.CARGO_HOME }}
+            ~/.cargo/registry
             target
           key: miri-${{ runner.os }}
       - run: rustup default nightly
@@ -126,11 +135,11 @@ jobs:
       DIVAN_BYTES_COUNT: 1
       DIVAN_CHARS_COUNT: 2
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/cache@v4
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
         with:
           path: |
-            ${{ env.CARGO_HOME }}
+            ~/.cargo/registry
             target
           key: examples-test-${{ runner.os }}-${{ matrix.rust }}
       - run: rustup default ${{ matrix.rust }}
@@ -153,11 +162,11 @@ jobs:
           - macos-latest
           - windows-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/cache@v4
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
         with:
           path: |
-            ${{ env.CARGO_HOME }}
+            ~/.cargo/registry
             target
           key: examples-bench-${{ runner.os }}
       - run: rustup update stable --no-self-update
@@ -179,11 +188,11 @@ jobs:
           - macos-latest
           - windows-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/cache@v4
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
         with:
           path: |
-            ${{ env.CARGO_HOME }}
+            ~/.cargo/registry
             target
           key: internals-bench-${{ runner.os }}
       - run: rustup update stable --no-self-update
